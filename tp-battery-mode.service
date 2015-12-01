@@ -1,5 +1,5 @@
 [Unit]
-Description=Set Battery Charge Thresholds using tpacpi-bat
+Description=Set battery charge thresholds using tpacpi-bat
 
 [Service]
 Type=oneshot

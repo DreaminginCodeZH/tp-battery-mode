@@ -1,36 +1,37 @@
 #!/bin/bash
 
-if [[ -e /etc/tp-battery-mode.conf ]]; then
-    source /etc/tp-battery-mode.conf
-else
-    STARTTHRESHOLD=85
-    STOPTHRESHOLD=90
-fi
+case "$1" in
 
-if [[ $1 == "start" ]]; then
-    # First battery
-    if [[ -e /sys/class/power_supply/BAT0 ]]; then
-        /usr/bin/tpacpi-bat -s ST 1 ${STARTTHRESHOLD}
-        /usr/bin/tpacpi-bat -s SP 1 ${STOPTHRESHOLD}
-    fi
-    # Second battery
-    if [[ -e /sys/class/power_supply/BAT1 ]]; then
-        /usr/bin/tpacpi-bat -s ST 2 ${STARTTHRESHOLD}
-        /usr/bin/tpacpi-bat -s SP 2 ${STOPTHRESHOLD}
-    fi
-elif [[ $1 == "stop" ]]; then
-    # First battery
-    if [[ -e /sys/class/power_supply/BAT0 ]]; then
-        /usr/bin/tpacpi-bat -s ST 1 0
-        /usr/bin/tpacpi-bat -s SP 1 0
-    fi
-    # Second battery
-    if [[ -e /sys/class/power_supply/BAT1 ]]; then
-        /usr/bin/tpacpi-bat -s ST 2 0
-        /usr/bin/tpacpi-bat -s SP 2 0
-    fi
-else
-    echo "usage: tp-battery-mode.sh [start|stop]"
-    echo "  start -> Battery optimization for lifespan"
-    echo "  stop  -> Battery optimization for runtime (default behavior)"
+    "start")
+        if [[ -e /etc/tp-battery-mode.conf ]]; then
+            source /etc/tp-battery-mode.conf
+        fi
+        if [[ -z "${START_THRESHOLD}" ]]; then
+            START_THRESHOLD=85
+        fi
+        if [[ -z "${STOP_THRESHOLD}" ]]; then
+            STOP_THRESHOLD=90
+        fi
+        ;;
+
+    "stop")
+        START_THRESHOLD=0
+        STOP_THRESHOLD=0
+        ;;
+
+    *)
+        echo "usage: tp-battery-mode.sh [start|stop]"
+        echo "  start -> Battery optimization for lifespan"
+        echo "  stop  -> Battery optimization for runtime (default behavior)"
+        exit 1
+        ;;
+esac
+
+if [[ -e /sys/class/power_supply/BAT0 ]]; then
+    /usr/bin/tpacpi-bat -s ST 1 "${START_THRESHOLD}"
+    /usr/bin/tpacpi-bat -s SP 1 "${STOP_THRESHOLD}"
+fi
+if [[ -e /sys/class/power_supply/BAT1 ]]; then
+    /usr/bin/tpacpi-bat -s ST 2 "${START_THRESHOLD}"
+    /usr/bin/tpacpi-bat -s SP 2 "${STOP_THRESHOLD}"
 fi
